@@ -807,7 +807,7 @@ with tab3:
                   </div>
                 </div>''', unsafe_allow_html=True)
 
-monthly_cost   = saved_dollars / 12
+    monthly_cost   = saved_dollars / 12
     per_picker_mo  = monthly_cost / pickers
     inaction_msg   = (
         f'<div style="background:#FEF0ED;border:1px solid {RED};border-radius:8px;'
