@@ -807,14 +807,18 @@ with tab3:
                   </div>
                 </div>''', unsafe_allow_html=True)
 
-    st.markdown(
-        f'<div style="background:#FEF0ED;border:1px solid {RED};border-radius:8px;
-              padding:0.8rem 1rem;margin-top:10px;color:#0A1628;">'
-          <b style="color:{RED};">Every month of inaction costs ${saved_dollars/12:,.0f}</b>
-          in foregone labor savings — that's ${saved_dollars/12/pickers:,.0f} per picker per month.
-          At current wage trajectory (+3% YoY), the 2-year cumulative opportunity cost
-          reaches <b>${cumulative_2yr:,.0f}</b>.
-        </div>''', unsafe_allow_html=True)
+monthly_cost   = saved_dollars / 12
+    per_picker_mo  = monthly_cost / pickers
+    inaction_msg   = (
+        f'<div style="background:#FEF0ED;border:1px solid {RED};border-radius:8px;'
+        f'padding:0.8rem 1rem;margin-top:10px;color:#0A1628;">'
+        f'<b style="color:{RED};">Every month of inaction costs ${monthly_cost:,.0f}</b> '
+        f'in foregone labor savings — that is ${per_picker_mo:,.0f} per picker per month. '
+        f'At current wage trajectory (+3% YoY), the 2-year cumulative opportunity cost '
+        f'reaches <b>${cumulative_2yr:,.0f}</b>.'
+        f'</div>'
+    )
+    st.markdown(inaction_msg, unsafe_allow_html=True)
 
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
