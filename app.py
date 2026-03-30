@@ -808,8 +808,8 @@ with tab3:
                 </div>''', unsafe_allow_html=True)
 
     st.markdown(
-        f'''<div style="background:#FEF0ED;border:1px solid {RED};border-radius:8px;
-                      padding:0.8rem 1rem;margin-top:10px;">
+        f'<div style="background:#FEF0ED;border:1px solid {RED};border-radius:8px;
+              padding:0.8rem 1rem;margin-top:10px;color:#0A1628;">'
           <b style="color:{RED};">Every month of inaction costs ${saved_dollars/12:,.0f}</b>
           in foregone labor savings — that's ${saved_dollars/12/pickers:,.0f} per picker per month.
           At current wage trajectory (+3% YoY), the 2-year cumulative opportunity cost
