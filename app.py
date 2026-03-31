@@ -117,11 +117,11 @@ div[data-testid="column"]:nth-child(2) .stButton > button:hover {
 .ai-resp  { font-size: 0.87rem; color: #0A1628; line-height: 1.7; }
 
 .move-a { background: #E8F8F1; border-left: 3px solid #00875A;
-          padding: 7px 12px; border-radius: 5px; margin: 3px 0; font-size: 0.8rem; }
+          padding: 7px 12px; border-radius: 5px; margin: 3px 0; font-size: 0.8rem; color: #0A1628; }
 .move-b { background: #FFF4E5; border-left: 3px solid #FF8B00;
-          padding: 7px 12px; border-radius: 5px; margin: 3px 0; font-size: 0.8rem; }
+          padding: 7px 12px; border-radius: 5px; margin: 3px 0; font-size: 0.8rem; color: #0A1628; }
 .move-c { background: #FEF0ED; border-left: 3px solid #DE350B;
-          padding: 7px 12px; border-radius: 5px; margin: 3px 0; font-size: 0.8rem; }
+          padding: 7px 12px; border-radius: 5px; margin: 3px 0; font-size: 0.8rem; color: #0A1628; }
 
 .roi-box { background: linear-gradient(135deg, #003DA5 0%, #0050D0 100%);
            border-radius: 12px; padding: 1.6rem 1.4rem; text-align: center;
@@ -235,6 +235,34 @@ with tab1:
             axis=1,
         )
         return opt
+
+    def compute_risk(src):
+        out = src.copy()
+        max_hits  = out["Monthly_Hits"].max()
+        min_hits  = out["Monthly_Hits"].min()
+        hit_norm  = (out["Monthly_Hits"] - min_hits) / (max_hits - min_hits)
+        max_units = out["Avg_Units"].max()
+        min_units = out["Avg_Units"].min()
+        unit_norm = 1 - (out["Avg_Units"] - min_units) / (max_units - min_units)
+        out["Stockout_Score"] = (hit_norm * 0.6 + unit_norm * 0.4) * 100
+        out["Excess_Score"]   = ((1 - hit_norm) * 0.5 + (1 - unit_norm) * 0.5) * 100
+        def mscore(row):
+            vc, cz = str(row["Velocity_Class"]), str(row["Current_Zone"])
+            if vc == "A" and cz != "A": return 90
+            if vc == "B" and cz == "C": return 55
+            if vc == "C" and cz == "A": return 40
+            return 10
+        out["Misplace_Score"] = out.apply(mscore, axis=1)
+        out["Risk_Score"] = (out["Stockout_Score"]*0.35 + out["Excess_Score"]*0.25 + out["Misplace_Score"]*0.40).round(1)
+        out["Risk_Label"] = out["Risk_Score"].apply(lambda s: "HIGH" if s>=65 else ("MEDIUM" if s>=40 else "LOW"))
+        trends = {"CB-120A":8,"CB-240A":5,"WN-14G":12,"CP-15A":-15,"EM-LED4":3,
+                  "PB-100":-2,"TR-480":-22,"CB-EP20":9,"RW-12G":-4,"JB-4SQ":15,
+                  "FL-T8":-30,"MC-3/4":1,"DP-100A":-18,"OL-3PH":-8,"WT-STD":6}
+        out["Trend_30d"] = out["SKU"].map(trends)
+        out["Trend_Label"] = out["Trend_30d"].apply(lambda x: f"+{x}%" if x>0 else f"{x}%")
+        return out.sort_values("Risk_Score", ascending=False).reset_index(drop=True)
+
+    risk_df = compute_risk(df)
 
     if "optimized" not in st.session_state:
         st.session_state.optimized = False
@@ -454,6 +482,85 @@ with tab1:
               </span>
             </div>""", unsafe_allow_html=True)
 
+
+
+    # ── ML Risk Prediction — full width, shown only before optimization ─────────
+    if not st.session_state.optimized:
+        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
+        st.markdown('<div class="sec-hdr">🧠 ML SKU Risk Prediction — 30-Day Inventory and Placement Risk Model</div>', unsafe_allow_html=True)
+
+        high_ct = len(risk_df[risk_df["Risk_Label"]=="HIGH"])
+        med_ct  = len(risk_df[risk_df["Risk_Label"]=="MEDIUM"])
+        low_ct  = len(risk_df[risk_df["Risk_Label"]=="LOW"])
+
+        rs1, rs2, rs3, rs4 = st.columns(4)
+        for col_s, (lbl, val, clr) in zip([rs1,rs2,rs3,rs4],[
+            ("HIGH RISK SKUs",   str(high_ct)+" SKUs", RED),
+            ("MEDIUM RISK SKUs", str(med_ct)+" SKUs",  WARN),
+            ("LOW RISK SKUs",    str(low_ct)+" SKUs",  GREEN),
+            ("MODEL FACTORS",    "3 INPUTS",            BLUE),
+        ]):
+            with col_s:
+                st.markdown(
+                    f'<div class="mini-card"><div class="mini-lbl">{lbl}</div>'
+                    f'<div class="mini-val" style="color:{clr};">{val}</div></div>',
+                    unsafe_allow_html=True)
+
+        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+
+        ml_c1, ml_c2 = st.columns(2, gap="medium")
+        for i, (_, row) in enumerate(risk_df.iterrows()):
+            col_target = ml_c1 if i % 2 == 0 else ml_c2
+            rl    = row["Risk_Label"]
+            clr   = RED if rl=="HIGH" else (WARN if rl=="MEDIUM" else GREEN)
+            bg    = "#FEF0ED" if rl=="HIGH" else ("#FFF4E5" if rl=="MEDIUM" else "#E8F8F1")
+            tr    = row["Trend_30d"]
+            tclr  = "#DE350B" if tr > 0 else "#00875A"
+            ttext = row["Trend_Label"]
+            bw    = int(row["Risk_Score"])
+            html  = (
+                f'<div style="background:{bg};border-left:4px solid {clr};'
+                f'border:1px solid {clr};border-radius:8px;padding:10px 14px;'
+                f'margin-bottom:8px;color:#0A1628;">'
+                f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
+                f'<div>'
+                f'<b style="color:{INK};font-size:0.9rem;">{row["SKU"]}</b>'
+                f'<span style="color:{GREY_TXT};font-size:0.78rem;margin-left:8px;">{str(row["Description"])[:28]}</span>'
+                f'</div>'
+                f'<div style="display:flex;gap:8px;align-items:center;">'
+                f'<span style="font-size:0.72rem;color:{tclr};font-weight:600;">{ttext} demand</span>'
+                f'<span style="background:{clr};color:#FFF;font-size:0.68rem;font-weight:700;'
+                f'padding:2px 10px;border-radius:10px;">{rl} RISK</span>'
+                f'</div></div>'
+                f'<div style="display:flex;gap:16px;font-size:0.75rem;color:{GREY_TXT};margin-bottom:5px;">'
+                f'<span>Hits/Mo: <b style="color:{INK};">{row["Monthly_Hits"]}</b></span>'
+                f'<span>Zone: <b style="color:{INK};">{row["Current_Zone"]}</b></span>'
+                f'<span>Class: <b style="color:{INK};">{row["Velocity_Class"]}</b></span>'
+                f'<span>Score: <b style="color:{clr};">{row["Risk_Score"]}/100</b></span>'
+                f'</div>'
+                f'<div style="background:#E0E6F0;border-radius:4px;height:6px;">'
+                f'<div style="background:{clr};height:6px;border-radius:4px;width:{bw}%;"></div>'
+                f'</div>'
+                f'<div style="display:flex;gap:12px;font-size:0.7rem;color:{GREY_TXT};margin-top:4px;">'
+                f'<span>Stockout: <b style="color:{INK};">{row["Stockout_Score"]:.0f}</b></span>'
+                f'<span>Excess: <b style="color:{INK};">{row["Excess_Score"]:.0f}</b></span>'
+                f'<span>Misplacement: <b style="color:{INK};">{row["Misplace_Score"]:.0f}</b></span>'
+                f'</div></div>'
+            )
+            with col_target:
+                st.markdown(html, unsafe_allow_html=True)
+
+        st.markdown(
+            f'<div class="info-box" style="margin-top:4px;">'
+            f'<b style="color:{BLUE};">Model methodology:</b> '
+            f'Weighted scoring across 3 factors — Stockout Risk (35%): high demand + low unit coverage; '
+            f'Excess Inventory Risk (25%): low demand + high unit count; '
+            f'Misplacement Risk (40%): velocity class vs current zone mismatch. '
+            f'30-day demand trend simulates Prophet time-series forecast output. '
+            f'In production: trained on 12 months of Epicor Eclipse transaction history '
+            f'using Random Forest classifier.</div>',
+            unsafe_allow_html=True)
+
     # ── AI Advisor ────────────────────────────────────────────────────────────
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
     st.markdown('<div class="sec-hdr">🤖 AI Warehouse Advisor</div>', unsafe_allow_html=True)
@@ -471,7 +578,8 @@ with tab1:
             f"SKU data (15 items): {json.dumps(summary)}\n"
             f"Slotting rules: A-class (>=400 hits/mo) -> Golden Zone Aisle 1. "
             f"B-class (200-399) -> Mid Zone Aisle 2. C-class (<200) -> Cold Zone Aisle 3+.\n"
-            f"Answer in 3-4 sentences, consultant tone. Cite specific SKU codes and hit counts."
+            f"Answer in 3-4 sentences of plain prose. No markdown, no asterisks, no bullet points. "
+            f"Cite specific SKU codes and hit counts."
         )
         with st.spinner("Analyzing warehouse data..."):
             try:
@@ -619,7 +727,8 @@ with tab2:
             f"Metrics: Pick Accuracy % (higher=better), OTD % (higher=better), "
             f"DIP Days (lower=better), Excess Inventory % (lower=better), "
             f"LPMH Lines Per Man Hour (higher=better), Slotting Score 0-100 (higher=better).\n"
-            f"Answer in 3-5 sentences. Cite specific values. Identify root cause. Recommend next action."
+            f"Answer in 3-5 sentences of plain prose. No markdown, no asterisks, no bullet points. "
+            f"Cite specific values. Identify root cause. Recommend next action."
         )
         with st.spinner("Analyzing OpCo data..."):
             try:
@@ -807,18 +916,14 @@ with tab3:
                   </div>
                 </div>''', unsafe_allow_html=True)
 
-    monthly_cost   = saved_dollars / 12
-    per_picker_mo  = monthly_cost / pickers
-    inaction_msg   = (
-        f'<div style="background:#FEF0ED;border:1px solid {RED};border-radius:8px;'
-        f'padding:0.8rem 1rem;margin-top:10px;color:#0A1628;">'
-        f'<b style="color:{RED};">Every month of inaction costs ${monthly_cost:,.0f}</b> '
-        f'in foregone labor savings — that is ${per_picker_mo:,.0f} per picker per month. '
-        f'At current wage trajectory (+3% YoY), the 2-year cumulative opportunity cost '
-        f'reaches <b>${cumulative_2yr:,.0f}</b>.'
-        f'</div>'
-    )
-    st.markdown(inaction_msg, unsafe_allow_html=True)
+    st.markdown(
+        f'''<div style="background:#FEF0ED;border:1px solid {RED};border-radius:8px;color:#0A1628;
+                      padding:0.8rem 1rem;margin-top:10px;">
+          <b style="color:{RED};">Every month of inaction costs ${saved_dollars/12:,.0f}</b>
+          in foregone labor savings — that's ${saved_dollars/12/pickers:,.0f} per picker per month.
+          At current wage trajectory (+3% YoY), the 2-year cumulative opportunity cost
+          reaches <b>${cumulative_2yr:,.0f}</b>.
+        </div>''', unsafe_allow_html=True)
 
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
@@ -853,7 +958,8 @@ with tab3:
             f"You are a senior supply chain consultant preparing a boardroom briefing "
             f"for the VP of Supply Chain at Sonepar USA.\n"
             f"ROI data: {json.dumps(ctx)}\n"
-            f"Write 4-5 sentences in executive language. Lead with dollar savings, "
+            f"Write 4-5 sentences in plain prose — no markdown, no asterisks, no bullet points, no headers. "
+            f"Use plain numbers with dollar signs. Lead with dollar savings, "
             f"support with productivity and payback, close with clear recommendation to proceed."
         )
         with st.spinner("Preparing executive briefing..."):
