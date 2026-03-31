@@ -149,6 +149,10 @@ div[data-testid="stException"] code { color: #0A1628 !important; }
 .stAlert { border-radius: 8px !important; }
 .stAlert p { color: #0A1628 !important; }
 
+/* Spinner text — dark ink */
+.stSpinner p { color: #0A1628 !important; }
+div[data-testid="stSpinner"] p { color: #0A1628 !important; }
+
 /* ROI slider labels - show in dark ink */
 .stSlider label, .stSlider .css-1d0tddh { color: #0A1628 !important; }
 label[data-testid="stWidgetLabel"] p { color: #0A1628 !important; font-weight: 500; }
