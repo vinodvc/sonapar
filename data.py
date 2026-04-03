@@ -23,6 +23,11 @@ def get_sku_data():
     df = pd.DataFrame(skus)
     df["Annual_Hits"] = df["Monthly_Hits"] * 12
     df["Velocity_Class"] = pd.cut(df["Monthly_Hits"], bins=[0,150,350,600], labels=["C","B","A"])
+    # ABC-XYZ: CoV simulates demand variability (proxy for real transaction history)
+    np.random.seed(42)
+    df["CoV"] = df["Avg_Units"].apply(lambda x: round(np.random.uniform(0.2, 1.4), 2))
+    df["Demand_Class"] = df["CoV"].apply(lambda c: "X" if c < 0.5 else ("Y" if c < 1.0 else "Z"))
+    df["ABC_XYZ"] = df["Velocity_Class"].astype(str) + df["Demand_Class"]
     return df
 
 
