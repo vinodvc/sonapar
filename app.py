@@ -149,13 +149,52 @@ div[data-testid="stException"] code { color: #0A1628 !important; }
 .stAlert { border-radius: 8px !important; }
 .stAlert p { color: #0A1628 !important; }
 
-/* Spinner text — dark ink */
-.stSpinner p { color: #0A1628 !important; }
-div[data-testid="stSpinner"] p { color: #0A1628 !important; }
-
-/* ROI slider labels - show in dark ink */
-.stSlider label, .stSlider .css-1d0tddh { color: #0A1628 !important; }
-label[data-testid="stWidgetLabel"] p { color: #0A1628 !important; font-weight: 500; }
+/* Force ALL text dark — nuclear approach for Streamlit Cloud compatibility */
+* { color: #0A1628; }
+/* Restore white text only where explicitly needed */
+.app-header, .app-header *, .app-title, .app-title *,
+.app-sub, .live-badge, .live-badge *,
+.roi-box, .roi-box *, .roi-num, .roi-lbl,
+.stTabs [aria-selected="true"], .stTabs [aria-selected="true"] *,
+.stButton > button, .stButton > button *,
+button[kind="primary"], button[kind="primary"] * { color: inherit; }
+/* Explicit white for header and blue boxes */
+.app-header { color: #FFFFFF !important; }
+.app-title { color: #FFFFFF !important; }
+.app-sub { color: rgba(255,255,255,0.6) !important; }
+.live-badge { color: #FFFFFF !important; }
+.roi-num { color: #FF6B00 !important; }
+.roi-lbl { color: rgba(255,255,255,0.7) !important; }
+.stTabs [aria-selected="true"] { color: #FFFFFF !important; }
+.stButton > button { color: #FFFFFF !important; }
+/* Spinner */
+div[data-testid="stSpinner"] p,
+div[data-testid="stSpinner"] div,
+.stSpinner > div,
+[class*="spinner"] p { color: #0A1628 !important; }
+/* Slider tick marks and range numbers */
+div[data-testid="stSlider"] p,
+div[data-testid="stSlider"] span,
+div[data-testid="stSlider"] div,
+.stSlider p, .stSlider span,
+[data-testid="stTickBarMin"], [data-testid="stTickBarMax"],
+[data-testid="stSliderThumbValue"] { color: #0A1628 !important; }
+/* Toggle */
+div[data-testid="stToggle"] p,
+div[data-testid="stToggle"] span,
+div[data-testid="stToggle"] div:not([class*="track"]):not([class*="thumb"]) { color: #0A1628 !important; }
+/* Expander */
+details summary, details summary *,
+div[data-testid="stExpander"] summary,
+div[data-testid="stExpander"] summary * { color: #0A1628 !important; font-weight: 600 !important; }
+/* All widget labels */
+label, label p, [data-testid="stWidgetLabel"],
+[data-testid="stWidgetLabel"] p { color: #0A1628 !important; font-weight: 500 !important; }
+/* Selectbox, multiselect */
+.stSelectbox *, .stMultiSelect * { color: #0A1628 !important; }
+/* Error boxes */
+div[data-testid="stException"],
+div[data-testid="stException"] * { color: #0A1628 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -176,12 +215,26 @@ st.markdown("""
 # ══════════════════════════════════════════════════════════════════════════════
 # NETWORK KPI STRIP
 # ══════════════════════════════════════════════════════════════════════════════
+_od, _ = get_opco_data()
+def _nhs(opco_data, idx=-1):
+    s = []
+    for o in opco_data:
+        d = opco_data[o]
+        s.append(d["Pick_Accuracy"][idx]*0.25 + d["OTD"][idx]*0.25 +
+                 d["Slotting_Score"][idx]*0.20 +
+                 max(0,100-d["DIP_Days"][idx]*10)*0.15 +
+                 max(0,100-d["Excess_Inv_Pct"][idx])*0.15)
+    import numpy as _np2
+    return round(_np2.mean(s),1)
+_nh  = _nhs(_od,-1); _nhp = _nhs(_od,-2)
+_sl  = round(sum([_od[o]["Slotting_Score"][-1] for o in _od])/3,1)
+_slp = round(sum([_od[o]["Slotting_Score"][-2] for o in _od])/3,1)
 kpis = [
-    ("NETWORK SKUs",      "10,247", "▲ 3.2% vs last mo", True),
-    ("AVG PICK ACCURACY", "97.2%",  "▲ 1.4 pts",         True),
-    ("AVG DIP DAYS",      "3.1",    "▼ 0.6 days",        True),
-    ("EXCESS INVENTORY",  "15.4%",  "▼ 3.1 pts",         True),
-    ("AT-RISK SKUs",      "23",     "▲ 5 this month",    False),
+    ("NETWORK HEALTH",    f"{_nh}/100",  f"▲ {round(_nh-_nhp,1)} pts",  True),
+    ("AVG PICK ACCURACY", "97.2%",       "▲ 1.4 pts",                    True),
+    ("AVG DIP DAYS",      "3.1",         "▼ 0.6 days",                   True),
+    ("NETWORK SLOT SCORE",f"{_sl}/100",  f"▲ {round(_sl-_slp,1)} pts",  True),
+    ("AT-RISK SKUs",      "23",          "▲ 5 this month",               False),
 ]
 for col, (lbl, val, delta, pos) in zip(st.columns(5), kpis):
     with col:
@@ -193,6 +246,19 @@ for col, (lbl, val, delta, pos) in zip(st.columns(5), kpis):
         </div>""", unsafe_allow_html=True)
 
 st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+
+st.markdown(
+    '<style>'
+    'div[data-testid="stSpinner"] p, .stSpinner p { color: #0A1628 !important; }'
+    'div[data-testid="stSlider"] [data-testid="stTickBarMin"],'
+    'div[data-testid="stSlider"] [data-testid="stTickBarMax"],'
+    'div[data-testid="stSlider"] div > div > div > div { color: #0A1628 !important; }'
+    'div[data-testid="stSlider"] label p { color: #0A1628 !important; font-weight:500 !important; }'
+    'div[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] { background:#003DA5 !important; }'
+    'div[data-testid="stCheckbox"] { background:#F0F4FF; border-radius:6px; padding:4px 8px; }'
+    'div[data-testid="stCheckbox"] label p { color:#0A1628 !important; font-weight:500 !important; }'
+    'div[data-testid="stCheckbox"] input[type="checkbox"] { accent-color:#003DA5; width:16px; height:16px; }'
+    '</style>', unsafe_allow_html=True)
 
 tab1, tab2, tab3 = st.tabs([
     "⚙️  SLOTTING ENGINE",
@@ -277,7 +343,7 @@ with tab1:
 
     # ── LEFT: SKU table ──────────────────────────────────────────────────────
     with left:
-        st.markdown('<div class="sec-hdr">📦 Eclipse SKU Master — Current Slot Assignments</div>',
+        st.markdown('<div class="sec-hdr">📦 Epicor Eclipse WMS/ERP — Current Slot Assignments</div>',
                     unsafe_allow_html=True)
         b1, b2 = st.columns([1, 1])
         with b1:
@@ -291,16 +357,17 @@ with tab1:
 
         display_df = st.session_state.opt_df.copy()
         if st.session_state.optimized:
-            cols_show  = ["SKU","Description","Monthly_Hits","Velocity_Class",
+            cols_show  = ["SKU","Description","Monthly_Hits","ABC_XYZ",
                           "Current_Zone","Opt_Zone","Move_Required","Travel_Saved_ft"]
-            col_rename = {"Monthly_Hits":"Hits/Mo","Velocity_Class":"Class",
+            col_rename = {"Monthly_Hits":"Hits/Mo","ABC_XYZ":"ABC-XYZ",
                           "Current_Zone":"Cur Zone","Opt_Zone":"Opt Zone",
                           "Move_Required":"Move?","Travel_Saved_ft":"Ft Saved/Mo"}
         else:
-            cols_show  = ["SKU","Description","Monthly_Hits","Velocity_Class",
+            cols_show  = ["SKU","Description","Monthly_Hits","Velocity_Class","ABC_XYZ",
                           "Current_Zone","Current_Aisle","Current_Bin"]
             col_rename = {"Monthly_Hits":"Hits/Mo","Velocity_Class":"Class",
-                          "Current_Zone":"Zone","Current_Aisle":"Aisle","Current_Bin":"Bin"}
+                          "ABC_XYZ":"ABC-XYZ","Current_Zone":"Zone",
+                          "Current_Aisle":"Aisle","Current_Bin":"Bin"}
 
         st.dataframe(
             display_df[cols_show].rename(columns=col_rename),
@@ -309,15 +376,23 @@ with tab1:
         if not st.session_state.optimized:
             st.markdown(
                 '<div style="font-size:0.75rem;color:#6B7A99;margin-top:6px;">'
-                f'15 SKUs loaded from mock Epicor Eclipse · '
-                f'A-class: {len(df[df["Velocity_Class"]=="A"])} SKUs · '
-                f'B-class: {len(df[df["Velocity_Class"]=="B"])} SKUs · '
-                f'C-class: {len(df[df["Velocity_Class"]=="C"])} SKUs</div>',
+                f'15 SKUs · Epicor Eclipse WMS/ERP · '
+                f'A: {len(df[df["Velocity_Class"]=="A"])} · '
+                f'B: {len(df[df["Velocity_Class"]=="B"])} · '
+                f'C: {len(df[df["Velocity_Class"]=="C"])} SKUs</div>',
+                unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="info-box" style="margin-top:5px;font-size:0.75rem;">'
+                f'<b style="color:{BLUE};">ABC-XYZ:</b> '
+                f'A/B/C = velocity (hit frequency) · X = stable (CoV &lt;0.5, AutoStore candidate) · '
+                f'Y = moderate variability · Z = erratic (CoV &gt;1.0, manual pick zone). '
+                f'<b>AX = automation ready · AZ = keep human pickers</b></div>',
                 unsafe_allow_html=True)
 
     # ── RIGHT: Zone map ──────────────────────────────────────────────────────
     with right:
-        st.markdown('<div class="sec-hdr">🗺️ Target Zone Map</div>', unsafe_allow_html=True)
+        zone_hdr = '📋 Recommended Moves' if st.session_state.optimized else '🗺️ Target Zone Map'
+        st.markdown(f'<div class="sec-hdr">{zone_hdr}</div>', unsafe_allow_html=True)
 
         if st.session_state.optimized:
             opt_df   = st.session_state.opt_df
@@ -390,26 +465,7 @@ with tab1:
                   </div>
                 </div>''', unsafe_allow_html=True)
 
-            # ── Root cause stats ─────────────────────────────────────────────
-            total_skus   = len(opt_df)
-            a_misplaced  = len(opt_df[(opt_df["Velocity_Class"]=="A") & (opt_df["Move_Required"]==True)])
-            a_total      = len(opt_df[opt_df["Velocity_Class"]=="A"])
-            pct_wrong    = int(a_misplaced / a_total * 100) if a_total > 0 else 0
-            top_aisle    = opt_df[opt_df["Move_Required"]==True]["Current_Aisle"].mode()
-            top_aisle_n  = int(top_aisle.iloc[0]) if len(top_aisle) > 0 else "N/A"
-            total_annual = int(opt_df["Travel_Saved_ft"].sum() * 12 / WALK_FT_MIN / 60 * PICKER_WAGE)
 
-            st.markdown(f'''
-            <div style="background:#FFF3E0;border:1px solid #FF8B00;border-radius:8px;
-                        padding:0.8rem 1rem;margin-top:8px;">
-              <div style="font-size:0.7rem;font-weight:700;color:#FF6B00;
-                          margin-bottom:6px;letter-spacing:0.5px;">📊 ROOT CAUSE SNAPSHOT</div>
-              <div style="font-size:0.8rem;color:{INK};line-height:1.8;">
-                • <b>{pct_wrong}% of A-class SKUs</b> are in wrong zone<br>
-                • <b>Aisle {top_aisle_n}</b> is the highest-impact misplacement aisle<br>
-                • Total network loss: <b>${total_annual:,}/yr</b> in wasted picker travel
-              </div>
-            </div>''', unsafe_allow_html=True)
 
         else:
             # Pre-optimization scatter — shows current (mis)placements
@@ -488,6 +544,35 @@ with tab1:
 
 
 
+    # ── Root Cause Snapshot — full width, after optimization ───────────────────
+    if st.session_state.optimized and "opt_df" in st.session_state:
+        _opt     = st.session_state.opt_df
+        _W       = 22.50; _FM = 250.0
+        a_mis    = len(_opt[(_opt["Velocity_Class"]=="A") & (_opt["Move_Required"]==True)])
+        a_tot    = len(_opt[_opt["Velocity_Class"]=="A"])
+        pct_w    = int(a_mis / a_tot * 100) if a_tot > 0 else 0
+        top_a    = _opt[_opt["Move_Required"]==True]["Current_Aisle"].mode()
+        top_an   = int(top_a.iloc[0]) if len(top_a) > 0 else "N/A"
+        tot_ann  = int(_opt["Travel_Saved_ft"].sum() * 12 / _FM / 60 * _W)
+        n_moves  = len(_opt[_opt["Move_Required"]==True])
+
+        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+        st.markdown('<div class="sec-hdr">📊 Root Cause Snapshot: DMAIC Analysis</div>', unsafe_allow_html=True)
+        rc1, rc2, rc3, rc4 = st.columns(4)
+        for col_r, (lbl, val, sub, clr) in zip([rc1,rc2,rc3,rc4],[
+            ("DEFINE",   f"{pct_w}% A-class misplaced",    "Fast movers in wrong zone",     RED),
+            ("MEASURE",  f"Aisle {top_an} highest impact", "Primary congestion source",     WARN),
+            ("ANALYZE",  f"${tot_ann:,}/yr wasted",        "Total picker travel loss",      ORANGE),
+            ("IMPROVE",  f"{n_moves} SKU moves planned",   "Re-slot action plan ready",     GREEN),
+        ]):
+            with col_r:
+                st.markdown(
+                    f'<div class="mini-card" style="border-top:3px solid {clr};">'
+                    f'<div class="mini-lbl" style="color:{clr};font-size:0.65rem;">{lbl}</div>'
+                    f'<div style="font-size:0.9rem;font-weight:700;color:#0A1628;margin:4px 0;">{val}</div>'
+                    f'<div style="font-size:0.7rem;color:#6B7A99;">{sub}</div>'
+                    f'</div>', unsafe_allow_html=True)
+
     # ── ML Risk Prediction — full width, shown only before optimization ─────────
     if not st.session_state.optimized:
         st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
@@ -560,8 +645,9 @@ with tab1:
             f'Weighted scoring across 3 factors — Stockout Risk (35%): high demand + low unit coverage; '
             f'Excess Inventory Risk (25%): low demand + high unit count; '
             f'Misplacement Risk (40%): velocity class vs current zone mismatch. '
+            f'Zone logic aligned with <b>Optricity slotting methodology</b> (A/B/C velocity zoning). '
             f'30-day demand trend simulates Prophet time-series forecast output. '
-            f'In production: trained on 12 months of Epicor Eclipse transaction history '
+            f'In production: trained on 12 months of <b>Epicor Eclipse WMS/ERP</b> transaction history '
             f'using Random Forest classifier.</div>',
             unsafe_allow_html=True)
 
@@ -612,7 +698,7 @@ with tab2:
     metric_labels = ["Pick Acc %","OTD %","DIP Days","Excess Inv %","LPMH","Slotting Score"]
     higher_better = [True, True, False, False, True, True]
 
-    st.markdown('<div class="sec-hdr">🏢 Enterprise OpCo Performance Benchmarking — Last 6 Months</div>',
+    st.markdown('<div class="sec-hdr">🏢 Enterprise OpCo Performance Benchmarking: Last 6 Months</div>',
                 unsafe_allow_html=True)
     selected = st.multiselect("Select OpCos to compare", opcos, default=opcos, key="opco_sel")
 
@@ -732,7 +818,9 @@ with tab2:
             f"DIP Days (lower=better), Excess Inventory % (lower=better), "
             f"LPMH Lines Per Man Hour (higher=better), Slotting Score 0-100 (higher=better).\n"
             f"Answer in 3-5 sentences of plain prose. No markdown, no asterisks, no bullet points. "
-            f"Cite specific values. Identify root cause. Recommend next action."
+            f"Use DMAIC thinking: Define what is broken, Measure the specific metric gap, "
+            f"Analyze the root cause, Improve with one concrete next action. "
+            f"Cite specific metric values throughout."
         )
         with st.spinner("Analyzing OpCo data..."):
             try:
@@ -767,31 +855,32 @@ with tab3:
     left_r, right_r = st.columns([1, 2], gap="medium")
 
     with left_r:
-        st.markdown('<div style="background:#FFF;border:1px solid #DDE3EE;border-radius:10px;padding:1rem 1.1rem;margin-bottom:0.6rem;box-shadow:0 1px 4px rgba(0,0,0,0.05);">'
-            '<div style="font-size:0.78rem;font-weight:700;color:#003DA5;margin-bottom:0.6rem;'
-            'border-bottom:1px solid #DDE3EE;padding-bottom:4px;">⚙️ Labor Parameters</div>',
-            unsafe_allow_html=True)
-        pickers          = st.slider("Number of Pickers",              5,   50,  12)
-        hourly_wage      = st.slider("Hourly Wage ($/hr)",            15.0, 45.0, 22.50, 0.50)
-        shifts_per_year  = st.slider("Shifts per Year",              200,  300,  250)
-        hours_per_shift  = st.slider("Hours per Shift",                6,   12,    8)
-        st.markdown('</div>', unsafe_allow_html=True)
+        with st.expander("⚙️ Labor Parameters", expanded=True):
+            pickers         = st.slider("Number of Pickers  (5 – 50)",      5,   50,  12)
+            hourly_wage     = st.slider("Hourly Wage  ($15 – $45/hr)",      15.0, 45.0, 22.50, 0.50)
+            shifts_per_year = st.slider("Shifts per Year  (200 – 300)",    200,  300,  250)
+            hours_per_shift = st.slider("Hours per Shift  (6 – 12)",         6,   12,    8)
 
-        st.markdown('<div style="background:#FFF;border:1px solid #DDE3EE;border-radius:10px;padding:1rem 1.1rem;margin-bottom:0.6rem;box-shadow:0 1px 4px rgba(0,0,0,0.05);">'
-            '<div style="font-size:0.78rem;font-weight:700;color:#003DA5;margin-bottom:0.6rem;'
-            'border-bottom:1px solid #DDE3EE;padding-bottom:4px;">🏭 Warehouse Parameters</div>',
-            unsafe_allow_html=True)
-        travel_reduction = st.slider("Travel Distance Reduction (%)",  5,   40,   22)
-        labor_cost_adj   = st.slider("What-If: Wage Increase (%)",     0,   30,    0)
-        st.markdown('</div>', unsafe_allow_html=True)
+        with st.expander("🏭 Warehouse Parameters", expanded=False):
+            travel_reduction = st.slider("Travel Distance Reduction  (5% – 40%)",  5,  40, 22)
+            labor_cost_adj   = st.slider("Wage Increase What-If  (0% – 30%)",      0,  30,  0)
+            st.markdown(
+                '<div style="background:#EEF3FF;border:1px solid #003DA5;border-radius:8px;padding:0.5rem 0.8rem;margin-bottom:4px;">&#9889; Compare with AutoStore Automation</div>',
+                unsafe_allow_html=True)
+            automation_mode = st.checkbox(
+                "Enable AutoStore comparison",
+                value=False, key="autostore_mode"
+            )
+            if automation_mode:
+                auto_cost_k    = st.slider("AutoStore Investment  ($100K – $600K)",  100, 600, 300)
+                auto_reduction = st.slider("AutoStore Travel Reduction  (30% – 65%)", 30,  65,  50)
+            else:
+                auto_cost_k    = 300
+                auto_reduction = 50
 
-        st.markdown('<div style="background:#FFF;border:1px solid #DDE3EE;border-radius:10px;padding:1rem 1.1rem;margin-bottom:0.6rem;box-shadow:0 1px 4px rgba(0,0,0,0.05);">'
-            '<div style="font-size:0.78rem;font-weight:700;color:#003DA5;margin-bottom:0.6rem;'
-            'border-bottom:1px solid #DDE3EE;padding-bottom:4px;">💸 Implementation Cost</div>',
-            unsafe_allow_html=True)
-        impl_cost_k      = st.slider("One-Time Re-slot Cost ($K)",     0,  200,   40)
-        impl_cost        = impl_cost_k * 1000
-        st.markdown('</div>', unsafe_allow_html=True)
+        with st.expander("💸 Implementation Cost", expanded=False):
+            impl_cost_k = st.slider("One-Time Re-slot Cost  ($0K – $200K)", 0, 200, 40)
+            impl_cost   = impl_cost_k * 1000
 
     with right_r:
         adjusted_wage    = hourly_wage * (1 + labor_cost_adj / 100)
@@ -889,6 +978,47 @@ with tab3:
                     f'<div class="mini-val" style="color:{clr};">{val}</div></div>',
                     unsafe_allow_html=True)
 
+    # ── AutoStore Comparison Panel ────────────────────────────────────────────
+    if automation_mode:
+        auto_impl    = auto_cost_k * 1000
+        auto_saved   = travel_time_cost * (auto_reduction / 100)
+        auto_payback = (auto_impl / (auto_saved / 12)) if auto_saved > 0 else 0
+        delta_save   = auto_saved - saved_dollars
+        delta_pb     = auto_payback - payback_months
+        recommend    = ("AutoStore reaches break-even in under 3 years — recommended if expanding headcount."
+                       if auto_payback <= 36 else
+                       "Manual re-slot is the smarter first move — lower risk, faster payback.")
+        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+        st.markdown('<div class="sec-hdr">🤖 Manual Re-slot vs AutoStore: Side by Side Comparison</div>', unsafe_allow_html=True)
+        ac1, ac2 = st.columns(2, gap="medium")
+        with ac1:
+            st.markdown(
+                f'<div style="background:linear-gradient(135deg,{BLUE} 0%,{BLUE_LT} 100%);'
+                f'border-radius:12px;padding:1.2rem 1.4rem;text-align:center;">'
+                f'<div style="font-size:0.6rem;color:rgba(255,255,255,0.7);font-family:DM Mono;letter-spacing:1.5px;margin-bottom:6px;">MANUAL RE-SLOT</div>'
+                f'<div style="font-size:1.8rem;font-weight:700;color:{ORANGE};font-family:DM Mono;">${saved_dollars:,.0f}/yr</div>'
+                f'<div style="font-size:0.75rem;color:rgba(255,255,255,0.85);margin-top:8px;">'
+                f'{travel_reduction}% travel reduction · ${impl_cost_k}K cost · {payback_months:.1f}mo payback<br>'
+                f'<b style="color:#FFFFFF;">Best for: fewer than 20 pickers, fast ROI</b></div></div>',
+                unsafe_allow_html=True)
+        with ac2:
+            st.markdown(
+                f'<div style="background:linear-gradient(135deg,#0d1f3c 0%,#1a3560 100%);'
+                f'border-radius:12px;padding:1.2rem 1.4rem;text-align:center;border:2px solid #00d4ff;">'
+                f'<div style="font-size:0.6rem;color:rgba(255,255,255,0.7);font-family:DM Mono;letter-spacing:1.5px;margin-bottom:6px;">AUTOSTORE AUTOMATION</div>'
+                f'<div style="font-size:1.8rem;font-weight:700;color:#00d4ff;font-family:DM Mono;">${auto_saved:,.0f}/yr</div>'
+                f'<div style="font-size:0.75rem;color:rgba(255,255,255,0.85);margin-top:8px;">'
+                f'{auto_reduction}% travel reduction · ${auto_cost_k}K cost · {auto_payback:.1f}mo payback<br>'
+                f'<b style="color:#FFFFFF;">Best for: 30+ pickers, enterprise scale</b></div></div>',
+                unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="background:#EEF3FF;border:1px solid {BLUE};border-radius:8px;'
+            f'padding:0.8rem 1rem;margin-top:8px;color:#0A1628;font-size:0.82rem;">'
+            f'<b style="color:{BLUE};">Decision insight:</b> AutoStore saves an additional ${delta_save:,.0f}/yr '
+            f'({auto_reduction - travel_reduction}% more reduction) but requires {delta_pb:.0f} more months to pay back. '
+            f'{recommend}</div>',
+            unsafe_allow_html=True)
+
     # ── Cost of Inaction ──────────────────────────────────────────────────────
     st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
     st.markdown('<div class="sec-hdr">⏳ Cost of Inaction — What Happens If We Do Not Fix This?</div>',
@@ -946,7 +1076,7 @@ with tab3:
             "pickers":             pickers,
             "adjusted_wage":       f"${adjusted_wage:.2f}/hr",
             "total_labor_cost":    f"${total_labor_cost:,.0f}",
-            "travel_time_cost":    f"${travel_time_cost:,.0f} (35% of total labor — industry standard)",
+            "travel_time_cost":    f"${travel_time_cost:,.0f} (35% of total labor (industry standard))",
             "travel_reduction":    f"{travel_reduction}%",
             "annual_savings":      f"${saved_dollars:,.0f}",
             "travel_hours_saved":  f"{saved_hrs:,.0f} hrs/yr",
@@ -963,8 +1093,9 @@ with tab3:
             f"for the VP of Supply Chain at Sonepar USA.\n"
             f"ROI data: {json.dumps(ctx)}\n"
             f"Write 4-5 sentences in plain prose — no markdown, no asterisks, no bullet points, no headers. "
-            f"Use plain numbers with dollar signs. Lead with dollar savings, "
-            f"support with productivity and payback, close with clear recommendation to proceed."
+            f"Use plain numbers with dollar signs. Frame as a Lean business case: "
+            f"current state cost, future state savings, implementation path, and recommendation. "
+            f"Reference DMAIC methodology naturally in the framing."
         )
         with st.spinner("Preparing executive briefing..."):
             try:
@@ -988,5 +1119,5 @@ st.markdown("""
 <div style="text-align:center;font-family:'DM Mono',monospace;font-size:0.56rem;
             color:#ADB5C8;padding:0.8rem 0;border-top:1px solid #DDE3EE;">
   SONEPAR NEXUS: DISTRIBUTION ORCHESTRATOR &nbsp;|&nbsp;
-  VINOD KUNAPULI &nbsp;|&nbsp; DEMO DATA — SONEPAR USA DISTRIBUTION NETWORK
+  VINOD KUNAPULI &nbsp;|&nbsp; Epicor Eclipse WMS/ERP · Optricity Slotting · DMAIC Methodology · Random Forest ML &nbsp;|&nbsp; DEMO DATA
 </div>""", unsafe_allow_html=True)
