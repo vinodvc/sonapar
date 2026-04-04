@@ -190,8 +190,21 @@ div[data-testid="stExpander"] summary * { color: #0A1628 !important; font-weight
 /* All widget labels */
 label, label p, [data-testid="stWidgetLabel"],
 [data-testid="stWidgetLabel"] p { color: #0A1628 !important; font-weight: 500 !important; }
-/* Selectbox, multiselect */
+/* Selectbox, multiselect — force white background on dropdown */
 .stSelectbox *, .stMultiSelect * { color: #0A1628 !important; }
+[data-baseweb='select'] { background: #FFFFFF !important; }
+[data-baseweb='select'] > div { background: #FFFFFF !important; color: #0A1628 !important; }
+[data-baseweb='popover'] { background: #FFFFFF !important; }
+[data-baseweb='popover'] li { background: #FFFFFF !important; color: #0A1628 !important; }
+[data-baseweb='popover'] li:hover { background: #EEF3FF !important; color: #003DA5 !important; }
+[data-baseweb='menu'] { background: #FFFFFF !important; }
+[data-baseweb='menu'] ul li { color: #0A1628 !important; background: #FFFFFF !important; }
+/* Expander — white bg, blue header text when open */
+details[data-testid='stExpander'] { background: #FFFFFF !important; }
+details[data-testid='stExpander'] summary { background: #EEF3FF !important; border-radius: 8px !important; }
+details[data-testid='stExpander'][open] summary { border-radius: 8px 8px 0 0 !important; }
+details[data-testid='stExpander'] summary span,
+details[data-testid='stExpander'] summary p { color: #003DA5 !important; font-weight: 600 !important; }
 /* Error boxes */
 div[data-testid="stException"],
 div[data-testid="stException"] * { color: #0A1628 !important; }
@@ -249,15 +262,22 @@ st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
 st.markdown(
     '<style>'
-    'div[data-testid="stSpinner"] p, .stSpinner p { color: #0A1628 !important; }'
-    'div[data-testid="stSlider"] [data-testid="stTickBarMin"],'
-    'div[data-testid="stSlider"] [data-testid="stTickBarMax"],'
-    'div[data-testid="stSlider"] div > div > div > div { color: #0A1628 !important; }'
-    'div[data-testid="stSlider"] label p { color: #0A1628 !important; font-weight:500 !important; }'
-    'div[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] { background:#003DA5 !important; }'
-    'div[data-testid="stCheckbox"] { background:#F0F4FF; border-radius:6px; padding:4px 8px; }'
+    'div[data-testid="stSpinner"] p { color: #0A1628 !important; }'
+    'div[data-testid="stSlider"] label p { color: #0A1628 !important; font-weight:600 !important; }'
+    'div[data-testid="stSlider"] [data-testid="stTickBarMin"] { color: #0A1628 !important; }'
+    'div[data-testid="stSlider"] [data-testid="stTickBarMax"] { color: #0A1628 !important; }'
+    'details[data-testid="stExpander"] { background:#FFFFFF !important; border:1px solid #DDE3EE !important; border-radius:10px !important; margin-bottom:8px !important; }'
+    'details[data-testid="stExpander"] summary { background:#EEF3FF !important; border-radius:8px !important; padding:8px 12px !important; }'
+    'details[data-testid="stExpander"] summary span { color:#003DA5 !important; font-weight:600 !important; }'
+    'details[data-testid="stExpander"] summary p { color:#003DA5 !important; font-weight:600 !important; }'
+    '[data-baseweb="select"] > div { background:#FFFFFF !important; color:#0A1628 !important; }'
+    '[data-baseweb="popover"] { background:#FFFFFF !important; }'
+    '[data-baseweb="popover"] li { background:#FFFFFF !important; color:#0A1628 !important; }'
+    '[data-baseweb="popover"] li:hover { background:#EEF3FF !important; color:#003DA5 !important; }'
+    '[data-baseweb="menu"] { background:#FFFFFF !important; }'
+    '[data-baseweb="menu"] li { color:#0A1628 !important; background:#FFFFFF !important; }'
     'div[data-testid="stCheckbox"] label p { color:#0A1628 !important; font-weight:500 !important; }'
-    'div[data-testid="stCheckbox"] input[type="checkbox"] { accent-color:#003DA5; width:16px; height:16px; }'
+    'div[data-testid="stCheckbox"] input { accent-color:#003DA5; }'
     '</style>', unsafe_allow_html=True)
 
 tab1, tab2, tab3 = st.tabs([
