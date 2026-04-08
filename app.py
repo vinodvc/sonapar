@@ -199,12 +199,12 @@ label, label p, [data-testid="stWidgetLabel"],
 [data-baseweb='popover'] li:hover { background: #EEF3FF !important; color: #003DA5 !important; }
 [data-baseweb='menu'] { background: #FFFFFF !important; }
 [data-baseweb='menu'] ul li { color: #0A1628 !important; background: #FFFFFF !important; }
-/* Expander — white bg, blue header text when open */
+/* Expander — white bg, blue header text always (open AND closed) */
 details[data-testid='stExpander'] { background: #FFFFFF !important; }
 details[data-testid='stExpander'] summary { background: #EEF3FF !important; border-radius: 8px !important; }
 details[data-testid='stExpander'][open] summary { border-radius: 8px 8px 0 0 !important; }
-details[data-testid='stExpander'] summary span,
-details[data-testid='stExpander'] summary p { color: #003DA5 !important; font-weight: 600 !important; }
+details[data-testid='stExpander'] summary *,
+details[data-testid='stExpander'][open] summary * { color: #003DA5 !important; font-weight: 600 !important; }
 /* Error boxes */
 div[data-testid="stException"],
 div[data-testid="stException"] * { color: #0A1628 !important; }
@@ -873,7 +873,8 @@ with tab2:
                 margin=dict(l=20, r=20, t=20, b=80),
                 height=340,
             )
-            st.plotly_chart(fig_radar, use_container_width=True)
+            st.plotly_chart(fig_radar, use_container_width=True,
+                config={"modeBarButtonsToAdd": ["resetScale2d"]})
 
     # ── AI Advisor ────────────────────────────────────────────────────────────
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
