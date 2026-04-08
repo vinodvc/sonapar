@@ -352,7 +352,7 @@ with tab1:
         out["Trend_Label"] = out["Trend_30d"].apply(lambda x: f"+{x}%" if x>0 else f"{x}%")
         return out.sort_values("Risk_Score", ascending=False).reset_index(drop=True)
 
-    risk_df = compute_risk(st.session_state.get("edited_df", df))
+    
 
     if "optimized" not in st.session_state:
         st.session_state.optimized = False
@@ -648,6 +648,10 @@ with tab1:
     # ── ML Risk Prediction — full width, shown only before optimization ─────────
     if not st.session_state.optimized:
         st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
+        if st.button("🧠 RUN ML PREDICTION", key="run_ml"):
+            st.session_state.ml_risk_df = compute_risk(st.session_state.get("edited_df", df))
+
+        risk_df = st.session_state.get("ml_risk_df", compute_risk(df))
         st.markdown('<div class="sec-hdr">🧠 ML SKU Risk Prediction — 30-Day Inventory and Placement Risk Model</div>', unsafe_allow_html=True)
 
         high_ct = len(risk_df[risk_df["Risk_Label"]=="HIGH"])
