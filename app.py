@@ -268,8 +268,8 @@ st.markdown(
     'div[data-testid="stSlider"] [data-testid="stTickBarMax"] { color: #0A1628 !important; }'
     'details[data-testid="stExpander"] { background:#FFFFFF !important; border:1px solid #DDE3EE !important; border-radius:10px !important; margin-bottom:8px !important; }'
     'details[data-testid="stExpander"] summary { background:#EEF3FF !important; border-radius:8px !important; padding:8px 12px !important; }'
-    'details[data-testid="stExpander"] summary span { color:#003DA5 !important; font-weight:600 !important; }'
-    'details[data-testid="stExpander"] summary p { color:#003DA5 !important; font-weight:600 !important; }'
+    'details[data-testid="stExpander"] summary * { color:#003DA5 !important; font-weight:600 !important; }'
+    'details[data-testid="stExpander"][open] summary * { color:#003DA5 !important; font-weight:600 !important; }'
     '[data-baseweb="select"] > div { background:#FFFFFF !important; color:#0A1628 !important; }'
     '[data-baseweb="popover"] { background:#FFFFFF !important; }'
     '[data-baseweb="popover"] li { background:#FFFFFF !important; color:#0A1628 !important; }'
@@ -874,7 +874,7 @@ with tab2:
                 height=340,
             )
             st.plotly_chart(fig_radar, use_container_width=True,
-                config={"modeBarButtonsToAdd": ["resetScale2d"]})
+                config={"modeBarButtonsToAdd": ["resetViews"]})
 
     # ── AI Advisor ────────────────────────────────────────────────────────────
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
