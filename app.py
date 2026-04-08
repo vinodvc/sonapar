@@ -278,11 +278,17 @@ st.markdown(
     '.modebar-btn:hover path { fill:#003DA5 !important; }'
     '.modebar-btn.active path { fill:#003DA5 !important; }'
     '.js-plotly-plot .plotly { background:#FFFFFF !important; }'
-    '[data-testid="stDataFrame"] button { background:#FFFFFF !important; border-radius:4px !important; }'
-    '[data-testid="stDataFrame"] button svg path { fill:#003DA5 !important; }'
-    '[data-testid="stDataEditorToolbar"] { background:#FFFFFF !important; }'
-    '[data-testid="stDataEditorToolbar"] button { background:#FFFFFF !important; }'
+    '[data-testid="stDataFrame"] > div:last-child { background:#FFFFFF !important; }'
+    '[data-testid="stDataFrame"] button { background:#FFFFFF !important; border-radius:4px !important; border:1px solid #DDE3EE !important; }'
+    '[data-testid="stDataFrame"] button svg { color:#003DA5 !important; }'
+    '[data-testid="stDataFrame"] button svg path { fill:#003DA5 !important; stroke:#003DA5 !important; }'
+    '[data-testid="stDataFrame"] [class*="toolbar"] { background:#FFFFFF !important; }'
+    '[data-testid="stDataEditorToolbar"] { background:#FFFFFF !important; border-bottom:1px solid #DDE3EE !important; }'
+    '[data-testid="stDataEditorToolbar"] button { background:#FFFFFF !important; border:1px solid #DDE3EE !important; color:#003DA5 !important; }'
     '[data-testid="stDataEditorToolbar"] button svg path { fill:#003DA5 !important; }'
+    '[data-testid="stDataEditorToolbar"] button:hover { background:#EEF3FF !important; }'
+    '.dvn-scroller { background:#FFFFFF !important; }'
+    '[class*="glideDataEditor"] { background:#FFFFFF !important; }'
     '[data-baseweb="select"] > div { background:#FFFFFF !important; color:#0A1628 !important; }'
     '[data-baseweb="popover"] { background:#FFFFFF !important; }'
     '[data-baseweb="popover"] li { background:#FFFFFF !important; color:#0A1628 !important; }'
@@ -894,7 +900,17 @@ with tab2:
                 margin=dict(l=20, r=20, t=20, b=80),
                 height=340,
             )
-            st.plotly_chart(fig_radar, use_container_width=True)
+            st.plotly_chart(fig_radar, use_container_width=True,
+                config=dict(
+                    displayModeBar=True,
+                    modeBarButtonsToRemove=[
+                        'resetAxis','resetScale2d','autoScale2d',
+                        'select2d','lasso2d','toggleSpikelines',
+                        'hoverClosestCartesian','hoverCompareCartesian'
+                    ],
+                    displaylogo=False,
+                    toImageButtonOptions=dict(format='png',filename='radar')
+                ))
 
     # ── AI Advisor ────────────────────────────────────────────────────────────
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
