@@ -205,6 +205,9 @@ details[data-testid='stExpander'] summary { background: #EEF3FF !important; bord
 details[data-testid='stExpander'][open] summary { border-radius: 8px 8px 0 0 !important; }
 details[data-testid='stExpander'] summary span,
 details[data-testid='stExpander'] summary p { color: #003DA5 !important; font-weight: 600 !important; }
+details[data-testid='stExpander'] summary:hover { background: #D6E4FF !important; }
+details[data-testid='stExpander'] summary:hover span,
+details[data-testid='stExpander'] summary:hover p { color: #002D80 !important; }
 /* Error boxes */
 div[data-testid="stException"],
 div[data-testid="stException"] * { color: #0A1628 !important; }
@@ -270,6 +273,9 @@ st.markdown(
     'details[data-testid="stExpander"] summary { background:#EEF3FF !important; border-radius:8px !important; padding:8px 12px !important; }'
     'details[data-testid="stExpander"] summary span { color:#003DA5 !important; font-weight:600 !important; }'
     'details[data-testid="stExpander"] summary p { color:#003DA5 !important; font-weight:600 !important; }'
+    'details[data-testid="stExpander"] summary:hover { background:#D6E4FF !important; }'
+    'details[data-testid="stExpander"] summary:hover span { color:#002D80 !important; }'
+    'details[data-testid="stExpander"] summary:hover p { color:#002D80 !important; }'
     '[data-baseweb="select"] > div { background:#FFFFFF !important; color:#0A1628 !important; }'
     '[data-baseweb="popover"] { background:#FFFFFF !important; }'
     '[data-baseweb="popover"] li { background:#FFFFFF !important; color:#0A1628 !important; }'
@@ -358,6 +364,8 @@ with tab1:
         st.session_state.optimized = False
     if "opt_df" not in st.session_state:
         st.session_state.opt_df = df.copy()
+    if "edited_df" not in st.session_state:
+        st.session_state.edited_df = df.copy()
 
     left, right = st.columns([3, 2], gap="medium")
 
@@ -368,39 +376,89 @@ with tab1:
         b1, b2 = st.columns([1, 1])
         with b1:
             if st.button("▶  RUN SLOTTING OPTIMIZATION", key="run_opt", use_container_width=True):
+                # Recompute Velocity_Class from edited hits before optimizing
+                edited = st.session_state.edited_df.copy()
+                edited["Velocity_Class"] = edited["Monthly_Hits"].apply(classify)
+                edited["ABC_XYZ"] = edited["Velocity_Class"] + edited["CoV"].apply(
+                    lambda c: "X" if c < 0.5 else ("Y" if c < 1.0 else "Z"))
                 st.session_state.optimized = True
-                st.session_state.opt_df    = run_optimization(df)
+                st.session_state.opt_df    = run_optimization(edited)
         with b2:
             if st.button("↺  RESET", key="reset_opt", use_container_width=True):
                 st.session_state.optimized = False
                 st.session_state.opt_df    = df.copy()
+                st.session_state.edited_df = df.copy()
 
-        display_df = st.session_state.opt_df.copy()
         if st.session_state.optimized:
+            # Post-optimization: read-only results table
+            display_df = st.session_state.opt_df.copy()
             cols_show  = ["SKU","Description","Monthly_Hits","ABC_XYZ",
                           "Current_Zone","Opt_Zone","Move_Required","Travel_Saved_ft"]
             col_rename = {"Monthly_Hits":"Hits/Mo","ABC_XYZ":"ABC-XYZ",
                           "Current_Zone":"Cur Zone","Opt_Zone":"Opt Zone",
                           "Move_Required":"Move?","Travel_Saved_ft":"Ft Saved/Mo"}
+            st.dataframe(
+                display_df[cols_show].rename(columns=col_rename),
+                use_container_width=True, height=570, hide_index=True,
+            )
         else:
-            cols_show  = ["SKU","Description","Monthly_Hits","Velocity_Class","ABC_XYZ",
-                          "Current_Zone","Current_Aisle","Current_Bin"]
-            col_rename = {"Monthly_Hits":"Hits/Mo","Velocity_Class":"Class",
-                          "ABC_XYZ":"ABC-XYZ","Current_Zone":"Zone",
-                          "Current_Aisle":"Aisle","Current_Bin":"Bin"}
+            # Pre-optimization: editable table — only Hits/Mo is editable
+            edit_src = st.session_state.edited_df.copy()
+            cols_edit = ["SKU","Description","Monthly_Hits","Velocity_Class","ABC_XYZ",
+                         "Current_Zone","Current_Aisle","Current_Bin"]
+            edit_view = edit_src[cols_edit].rename(columns={
+                "Monthly_Hits":"Hits/Mo","Velocity_Class":"Class",
+                "ABC_XYZ":"ABC-XYZ","Current_Zone":"Zone",
+                "Current_Aisle":"Aisle","Current_Bin":"Bin"})
 
-        st.dataframe(
-            display_df[cols_show].rename(columns=col_rename),
-            use_container_width=True, height=570, hide_index=True,
-        )
-        if not st.session_state.optimized:
-            st.markdown(
-                '<div style="font-size:0.75rem;color:#6B7A99;margin-top:6px;">'
-                f'15 SKUs · Epicor Eclipse WMS/ERP · '
-                f'A: {len(df[df["Velocity_Class"]=="A"])} · '
-                f'B: {len(df[df["Velocity_Class"]=="B"])} · '
-                f'C: {len(df[df["Velocity_Class"]=="C"])} SKUs</div>',
-                unsafe_allow_html=True)
+            edited_result = st.data_editor(
+                edit_view,
+                use_container_width=True,
+                height=570,
+                hide_index=True,
+                disabled=["SKU","Description","Class","ABC-XYZ","Zone","Aisle","Bin"],
+                column_config={
+                    "Hits/Mo": st.column_config.NumberColumn(
+                        "Hits/Mo",
+                        help="Edit monthly hit frequency to see how optimization changes",
+                        min_value=1,
+                        max_value=999,
+                        step=1,
+                        format="%d",
+                    )
+                },
+                key="sku_editor"
+            )
+
+            # Write edits back to session state
+            edited_result = edited_result.rename(columns={
+                "Hits/Mo":"Monthly_Hits","Class":"Velocity_Class",
+                "ABC-XYZ":"ABC_XYZ","Zone":"Current_Zone",
+                "Aisle":"Current_Aisle","Bin":"Current_Bin"})
+            for col in edited_result.columns:
+                if col in st.session_state.edited_df.columns:
+                    st.session_state.edited_df[col] = edited_result[col].values
+
+            # Show hint only when values differ from original
+            hits_changed = (st.session_state.edited_df["Monthly_Hits"] != df["Monthly_Hits"]).any()
+            if hits_changed:
+                changed_skus = st.session_state.edited_df[
+                    st.session_state.edited_df["Monthly_Hits"] != df["Monthly_Hits"]]["SKU"].tolist()
+                st.markdown(
+                    f'<div style="background:#E8F8F1;border-left:3px solid {GREEN};'
+                    f'border-radius:6px;padding:6px 10px;margin-top:6px;font-size:0.78rem;color:{INK};">'
+                    f'Hit frequency updated for: <b>{", ".join(changed_skus)}</b>. '
+                    f'Click <b>Run Slotting Optimization</b> to see how the engine re-classifies.</div>',
+                    unsafe_allow_html=True)
+            else:
+                st.markdown(
+                    f'<div style="font-size:0.75rem;color:{GREY_TXT};margin-top:6px;">'
+                    f'15 SKUs · Epicor Eclipse WMS/ERP · '
+                    f'A: {len(df[df["Velocity_Class"]=="A"])} · '
+                    f'B: {len(df[df["Velocity_Class"]=="B"])} · '
+                    f'C: {len(df[df["Velocity_Class"]=="C"])} SKUs · '
+                    f'<b style="color:{BLUE};">Edit Hits/Mo cells to simulate demand changes</b></div>',
+                    unsafe_allow_html=True)
             st.markdown(
                 f'<div class="info-box" style="margin-top:5px;font-size:0.75rem;">'
                 f'<b style="color:{BLUE};">ABC-XYZ:</b> '
@@ -681,7 +739,10 @@ with tab1:
     with q2:
         ask_slot = st.button("ASK ADVISOR →", key="ask_slot")
     if ask_slot and slot_q:
-        summary = df[["SKU","Description","Monthly_Hits","Velocity_Class","Current_Zone"]
+        # Use live edited data so AI reflects any hit frequency changes made by user
+        live_df  = st.session_state.edited_df.copy()
+        live_df["Velocity_Class"] = live_df["Monthly_Hits"].apply(classify)
+        summary  = live_df[["SKU","Description","Monthly_Hits","Velocity_Class","Current_Zone"]
                      ].to_dict(orient="records")
         sys_p = (
             f"You are a warehouse optimization expert analyzing Epicor Eclipse data for Sonepar USA.\n"
@@ -778,7 +839,15 @@ with tab2:
             st.plotly_chart(fig_trend, use_container_width=True)
 
         with rad_col:
-            st.markdown('<div class="sec-hdr">📡 Composite Radar</div>', unsafe_allow_html=True)
+            r_hdr, r_btn = st.columns([3,1])
+            with r_hdr:
+                st.markdown('<div class="sec-hdr">📡 Composite Radar</div>', unsafe_allow_html=True)
+            with r_btn:
+                if st.button('↺ Reset', key='radar_reset', use_container_width=True):
+                    if 'opco_sel' in st.session_state:
+                        st.session_state.opco_sel = list(opcos)
+                    if 'bench_metric' in st.session_state:
+                        st.session_state.bench_metric = 'Pick_Accuracy'
             # Normalise to 0-100 using realistic operational ranges for fair comparison
             radar_metrics = ["Pick_Accuracy","OTD","Slotting_Score","LPMH"]
             radar_labels  = ["Pick Acc","OTD","Slotting","LPMH"]
@@ -870,8 +939,16 @@ with tab2:
 with tab3:
     TRAVEL_PCT = 0.35   # 35% of picker time = non-value-add travel (industry benchmark)
 
-    st.markdown('<div class="sec-hdr">💰 Slotting Optimization ROI Calculator</div>',
-                unsafe_allow_html=True)
+    roi_h, roi_b = st.columns([4,1])
+    with roi_h:
+        st.markdown('<div class="sec-hdr">💰 Slotting Optimization ROI Calculator</div>', unsafe_allow_html=True)
+    with roi_b:
+        if st.button('↺ Reset Params', key='roi_reset', use_container_width=True):
+            for k in ['pickers','hourly_wage','shifts_per_year','hours_per_shift',
+                      'travel_reduction','labor_cost_adj','impl_cost_k',
+                      'autostore_mode','auto_cost_k','auto_reduction']:
+                if k in st.session_state: del st.session_state[k]
+            st.rerun()
     left_r, right_r = st.columns([1, 2], gap="medium")
 
     with left_r:
