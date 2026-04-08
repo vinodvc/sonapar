@@ -273,22 +273,30 @@ st.markdown(
     'details > summary { background:#EEF3FF !important; border-radius:8px !important; padding:8px 14px !important; }'
     'details > summary, details > summary * { color:#003DA5 !important; font-weight:600 !important; background:transparent !important; }'
     'details[data-testid="stExpander"] { border:1px solid #DDE3EE !important; border-radius:10px !important; margin-bottom:8px !important; }'
-    '.modebar-container { background:#FFFFFF !important; border-radius:6px !important; box-shadow:0 1px 4px rgba(0,0,0,0.1) !important; }'
-    '.modebar-btn path { fill:#6B7A99 !important; }'
-    '.modebar-btn:hover path { fill:#003DA5 !important; }'
-    '.modebar-btn.active path { fill:#003DA5 !important; }'
+    '.js-plotly-plot .modebar { background:#0A1628 !important; border-radius:8px !important; padding:4px 6px !important; box-shadow:0 1px 4px rgba(0,0,0,0.2) !important; }'
+    '.js-plotly-plot .modebar-group { background:transparent !important; }'
+    '.js-plotly-plot .modebar-btn svg { fill:#FFFFFF !important; }'
+    '.js-plotly-plot .modebar-btn path { fill:#FFFFFF !important; stroke:#FFFFFF !important; }'
+    '.js-plotly-plot .modebar-btn:hover path { fill:#FFFFFF !important; stroke:#FFFFFF !important; }'
+    '.js-plotly-plot .modebar-btn.active path { fill:#FFFFFF !important; stroke:#FFFFFF !important; }'
+    '.js-plotly-plot .modebar-btn:hover { background:rgba(255,255,255,0.12) !important; }'
     '.js-plotly-plot .plotly { background:#FFFFFF !important; }'
+    '[data-testid="stDataFrame"] { border:1px solid #DDE3EE !important; border-radius:8px !important; overflow:hidden !important; background:#FFFFFF !important; }'
     '[data-testid="stDataFrame"] > div:last-child { background:#FFFFFF !important; }'
-    '[data-testid="stDataFrame"] button { background:#FFFFFF !important; border-radius:4px !important; border:1px solid #DDE3EE !important; }'
-    '[data-testid="stDataFrame"] button svg { color:#003DA5 !important; }'
-    '[data-testid="stDataFrame"] button svg path { fill:#003DA5 !important; stroke:#003DA5 !important; }'
-    '[data-testid="stDataFrame"] [class*="toolbar"] { background:#FFFFFF !important; }'
-    '[data-testid="stDataEditorToolbar"] { background:#FFFFFF !important; border-bottom:1px solid #DDE3EE !important; }'
-    '[data-testid="stDataEditorToolbar"] button { background:#FFFFFF !important; border:1px solid #DDE3EE !important; color:#003DA5 !important; }'
-    '[data-testid="stDataEditorToolbar"] button svg path { fill:#003DA5 !important; }'
-    '[data-testid="stDataEditorToolbar"] button:hover { background:#EEF3FF !important; }'
+    '[data-testid="stDataFrame"] [class*="toolbar"] { background:#0A1628 !important; border-bottom:1px solid #1E2F4D !important; }'
+    '[data-testid="stDataFrame"] [class*="toolbar"] * { color:#FFFFFF !important; }'
+    '[data-testid="stDataFrame"] button { background:#0A1628 !important; border-radius:4px !important; border:1px solid #324A6D !important; color:#FFFFFF !important; }'
+    '[data-testid="stDataFrame"] button svg { color:#FFFFFF !important; }'
+    '[data-testid="stDataFrame"] button svg path { fill:#FFFFFF !important; stroke:#FFFFFF !important; }'
+    '[data-testid="stDataFrame"] button:hover { background:#1A2942 !important; border-color:#4B658A !important; }'
+    '[data-testid="stDataEditorToolbar"] { background:#0A1628 !important; border-bottom:1px solid #1E2F4D !important; }'
+    '[data-testid="stDataEditorToolbar"] * { color:#FFFFFF !important; }'
+    '[data-testid="stDataEditorToolbar"] button { background:#0A1628 !important; border:1px solid #324A6D !important; color:#FFFFFF !important; }'
+    '[data-testid="stDataEditorToolbar"] button svg path { fill:#FFFFFF !important; stroke:#FFFFFF !important; }'
+    '[data-testid="stDataEditorToolbar"] button:hover { background:#1A2942 !important; border-color:#4B658A !important; }'
     '.dvn-scroller { background:#FFFFFF !important; }'
     '[class*="glideDataEditor"] { background:#FFFFFF !important; }'
+    '[class*="glideDataEditor"] * { color:#0A1628 !important; }'
     '[data-baseweb="select"] > div { background:#FFFFFF !important; color:#0A1628 !important; }'
     '[data-baseweb="popover"] { background:#FFFFFF !important; }'
     '[data-baseweb="popover"] li { background:#FFFFFF !important; color:#0A1628 !important; }'
@@ -852,15 +860,7 @@ with tab2:
             st.plotly_chart(fig_trend, use_container_width=True)
 
         with rad_col:
-            r_hdr, r_btn = st.columns([3,1])
-            with r_hdr:
-                st.markdown('<div class="sec-hdr">📡 Composite Radar</div>', unsafe_allow_html=True)
-            with r_btn:
-                if st.button('↺ Reset', key='radar_reset', use_container_width=True):
-                    if 'opco_sel' in st.session_state:
-                        st.session_state.opco_sel = list(opcos)
-                    if 'bench_metric' in st.session_state:
-                        st.session_state.bench_metric = 'Pick_Accuracy'
+            st.markdown('<div class="sec-hdr">📡 Composite Radar</div>', unsafe_allow_html=True)
             # Normalise to 0-100 using realistic operational ranges for fair comparison
             radar_metrics = ["Pick_Accuracy","OTD","Slotting_Score","LPMH"]
             radar_labels  = ["Pick Acc","OTD","Slotting","LPMH"]
@@ -903,13 +903,13 @@ with tab2:
             st.plotly_chart(fig_radar, use_container_width=True,
                 config=dict(
                     displayModeBar=True,
+                    displaylogo=False,
                     modeBarButtonsToRemove=[
                         'resetAxis','resetScale2d','autoScale2d',
                         'select2d','lasso2d','toggleSpikelines',
                         'hoverClosestCartesian','hoverCompareCartesian'
                     ],
-                    displaylogo=False,
-                    toImageButtonOptions=dict(format='png',filename='radar')
+                    toImageButtonOptions=dict(format='png', filename='composite_radar')
                 ))
 
     # ── AI Advisor ────────────────────────────────────────────────────────────
