@@ -352,7 +352,7 @@ with tab1:
         out["Trend_Label"] = out["Trend_30d"].apply(lambda x: f"+{x}%" if x>0 else f"{x}%")
         return out.sort_values("Risk_Score", ascending=False).reset_index(drop=True)
 
-    risk_df = compute_risk(df)
+    risk_df = compute_risk(st.session_state.edited_df)
 
     if "optimized" not in st.session_state:
         st.session_state.optimized = False
