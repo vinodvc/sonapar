@@ -205,9 +205,6 @@ details[data-testid='stExpander'] summary { background: #EEF3FF !important; bord
 details[data-testid='stExpander'][open] summary { border-radius: 8px 8px 0 0 !important; }
 details[data-testid='stExpander'] summary span,
 details[data-testid='stExpander'] summary p { color: #003DA5 !important; font-weight: 600 !important; }
-details[data-testid='stExpander'] summary:hover { background: #D6E4FF !important; }
-details[data-testid='stExpander'] summary:hover span,
-details[data-testid='stExpander'] summary:hover p { color: #002D80 !important; }
 /* Error boxes */
 div[data-testid="stException"],
 div[data-testid="stException"] * { color: #0A1628 !important; }
@@ -269,40 +266,16 @@ st.markdown(
     'div[data-testid="stSlider"] label p { color: #0A1628 !important; font-weight:600 !important; }'
     'div[data-testid="stSlider"] [data-testid="stTickBarMin"] { color: #0A1628 !important; }'
     'div[data-testid="stSlider"] [data-testid="stTickBarMax"] { color: #0A1628 !important; }'
-    'details { background:#FFFFFF !important; }'
-    'details > summary { background:#EEF3FF !important; border-radius:8px !important; padding:8px 14px !important; }'
-    'details > summary, details > summary * { color:#003DA5 !important; font-weight:600 !important; background:transparent !important; }'
-    'details[data-testid="stExpander"] { border:1px solid #DDE3EE !important; border-radius:10px !important; margin-bottom:8px !important; }'
-    '.js-plotly-plot .modebar { background:#0A1628 !important; border-radius:8px !important; padding:4px 6px !important; box-shadow:0 1px 4px rgba(0,0,0,0.2) !important; }'
-    '.js-plotly-plot .modebar-group { background:transparent !important; }'
-    '.js-plotly-plot .modebar-btn svg { fill:#FFFFFF !important; }'
-    '.js-plotly-plot .modebar-btn path { fill:#FFFFFF !important; stroke:#FFFFFF !important; }'
-    '.js-plotly-plot .modebar-btn:hover path { fill:#FFFFFF !important; stroke:#FFFFFF !important; }'
-    '.js-plotly-plot .modebar-btn.active path { fill:#FFFFFF !important; stroke:#FFFFFF !important; }'
-    '.js-plotly-plot .modebar-btn:hover { background:rgba(255,255,255,0.12) !important; }'
-    '.js-plotly-plot .plotly { background:#FFFFFF !important; }'
-    '[data-testid="stDataFrame"] { border:1px solid #DDE3EE !important; border-radius:8px !important; overflow:hidden !important; background:#FFFFFF !important; }'
-    '[data-testid="stDataFrame"] > div:last-child { background:#FFFFFF !important; }'
-    '[data-testid="stDataFrame"] [class*="toolbar"] { background:#0A1628 !important; border-bottom:1px solid #1E2F4D !important; }'
-    '[data-testid="stDataFrame"] [class*="toolbar"] * { color:#FFFFFF !important; }'
-    '[data-testid="stDataFrame"] button { background:#0A1628 !important; border-radius:4px !important; border:1px solid #324A6D !important; color:#FFFFFF !important; }'
-    '[data-testid="stDataFrame"] button svg { color:#FFFFFF !important; }'
-    '[data-testid="stDataFrame"] button svg path { fill:#FFFFFF !important; stroke:#FFFFFF !important; }'
-    '[data-testid="stDataFrame"] button:hover { background:#1A2942 !important; border-color:#4B658A !important; }'
-    '[data-testid="stDataEditorToolbar"] { background:#0A1628 !important; border-bottom:1px solid #1E2F4D !important; }'
-    '[data-testid="stDataEditorToolbar"] * { color:#FFFFFF !important; }'
-    '[data-testid="stDataEditorToolbar"] button { background:#0A1628 !important; border:1px solid #324A6D !important; color:#FFFFFF !important; }'
-    '[data-testid="stDataEditorToolbar"] button svg path { fill:#FFFFFF !important; stroke:#FFFFFF !important; }'
-    '[data-testid="stDataEditorToolbar"] button:hover { background:#1A2942 !important; border-color:#4B658A !important; }'
-    '.dvn-scroller { background:#FFFFFF !important; }'
-    '[class*="glideDataEditor"] { background:#FFFFFF !important; }'
-    '[class*="glideDataEditor"] * { color:#0A1628 !important; }'
+    'details[data-testid="stExpander"] { background:#FFFFFF !important; border:1px solid #DDE3EE !important; border-radius:10px !important; margin-bottom:8px !important; }'
+    'details[data-testid="stExpander"] summary { background:#EEF3FF !important; border-radius:8px !important; padding:8px 12px !important; }'
+    'details[data-testid="stExpander"] summary span { color:#003DA5 !important; font-weight:600 !important; }'
+    'details[data-testid="stExpander"] summary p { color:#003DA5 !important; font-weight:600 !important; }'
     '[data-baseweb="select"] > div { background:#FFFFFF !important; color:#0A1628 !important; }'
     '[data-baseweb="popover"] { background:#FFFFFF !important; }'
     '[data-baseweb="popover"] li { background:#FFFFFF !important; color:#0A1628 !important; }'
     '[data-baseweb="popover"] li:hover { background:#EEF3FF !important; color:#003DA5 !important; }'
     '[data-baseweb="menu"] { background:#FFFFFF !important; }'
-    '[data-baseweb="menu"] ul li { color:#0A1628 !important; background:#FFFFFF !important; }'
+    '[data-baseweb="menu"] li { color:#0A1628 !important; background:#FFFFFF !important; }'
     'div[data-testid="stCheckbox"] label p { color:#0A1628 !important; font-weight:500 !important; }'
     'div[data-testid="stCheckbox"] input { accent-color:#003DA5; }'
     '</style>', unsafe_allow_html=True)
@@ -900,17 +873,7 @@ with tab2:
                 margin=dict(l=20, r=20, t=20, b=80),
                 height=340,
             )
-            st.plotly_chart(fig_radar, use_container_width=True,
-                config=dict(
-                    displayModeBar=True,
-                    displaylogo=False,
-                    modeBarButtonsToRemove=[
-                        'resetAxis','resetScale2d','autoScale2d',
-                        'select2d','lasso2d','toggleSpikelines',
-                        'hoverClosestCartesian','hoverCompareCartesian'
-                    ],
-                    toImageButtonOptions=dict(format='png', filename='composite_radar')
-                ))
+            st.plotly_chart(fig_radar, use_container_width=True)
 
     # ── AI Advisor ────────────────────────────────────────────────────────────
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
@@ -962,16 +925,8 @@ with tab2:
 with tab3:
     TRAVEL_PCT = 0.35   # 35% of picker time = non-value-add travel (industry benchmark)
 
-    roi_h, roi_b = st.columns([4,1])
-    with roi_h:
-        st.markdown('<div class="sec-hdr">💰 Slotting Optimization ROI Calculator</div>', unsafe_allow_html=True)
-    with roi_b:
-        if st.button('↺ Reset Params', key='roi_reset', use_container_width=True):
-            for k in ['pickers','hourly_wage','shifts_per_year','hours_per_shift',
-                      'travel_reduction','labor_cost_adj','impl_cost_k',
-                      'autostore_mode','auto_cost_k','auto_reduction']:
-                if k in st.session_state: del st.session_state[k]
-            st.rerun()
+    st.markdown('<div class="sec-hdr">💰 Slotting Optimization ROI Calculator</div>',
+                unsafe_allow_html=True)
     left_r, right_r = st.columns([1, 2], gap="medium")
 
     with left_r:
